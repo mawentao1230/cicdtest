@@ -1,0 +1,11 @@
+name: H2
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          cat > /tmp/test.txt <<-EOF
+          hello world
+          EOF
+          echo done
