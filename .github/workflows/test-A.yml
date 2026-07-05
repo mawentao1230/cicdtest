@@ -1,0 +1,11 @@
+name: Test A
+on:
+  push:
+  pull_request:
+    branches: [cicd_main]
+    types: [opened, synchronize, reopened]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
