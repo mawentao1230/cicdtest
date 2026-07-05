@@ -7,7 +7,8 @@ function loadDecisionFromOutput(filePath) {
   if (!jsonMatch) {
     throw new Error("无法从 AI 输出中提取决策 JSON");
   }
-  return JSON.parse(jsonMatch[0]);
+  const clean = jsonMatch[0].replace(/,\s*([\]}])/g, '$1');
+  return JSON.parse(clean);
 }
 
 function getPRInfo() {

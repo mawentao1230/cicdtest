@@ -187,7 +187,7 @@ jobs:
           - 编译失败无法修复 / 测试真失败 → "FAIL"
 
           ## 输出要求
-          仅输出以下 JSON 对象，不要任何其他文字、Markdown 包裹、代码块标记。
+          仅输出以下 JSON 对象，不要任何其他文字、Markdown 包裹、代码块标记、尾逗号。
           {
             "decision": "PASS",
             "confidence": 0.95,
@@ -225,7 +225,8 @@ jobs:
             } catch(e) {
               const m = raw.match(/\\{[\\s\\S]*?\"decision\"[\\s\\S]*?\\}/);
               if (m) {
-                const parsed = JSON.parse(m[0]);
+                const clean = m[0].replace(/,\\s*([\\]\\}])/g, '$1');
+                const parsed = JSON.parse(clean);
                 console.log(parsed.decision);
               } else {
                 console.log('FAIL');
