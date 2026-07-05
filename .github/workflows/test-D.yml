@@ -1,0 +1,10 @@
+name: Test D
+on: push
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Chinese test
+        run: |
+          echo "你好世界"
