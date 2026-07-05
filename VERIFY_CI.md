@@ -1,0 +1,1 @@
+# CI Verify\n\nTesting the smart cockpit CI/CD pipeline.
