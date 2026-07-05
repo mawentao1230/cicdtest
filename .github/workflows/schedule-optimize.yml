@@ -56,7 +56,7 @@ jobs:
           将输出写入 optimization-plan.md 文件。
           PROMPT_EOF
 
-          opencode run -- "$(cat /tmp/optimize-prompt.txt)" 2>&1 | tee optimize-output.log
+          opencode run --auto -- "$(cat /tmp/optimize-prompt.txt)" 2>&1 | tee optimize-output.log
 
       - name: Create optimization PR
         shell: bash
