@@ -56,10 +56,7 @@ jobs:
           然后调用 @hephaestus 实施 1 类优化，直接修改 workflow 文件。
           PROMPT_EOF
 
-          opencode run \
-            --config .opencode/opencode.jsonc \
-            -m opencode/deepseek-v4-flash-free \
-            -- "$(cat /tmp/optimize-prompt.txt)" 2>&1 | tee optimize-output.log
+          opencode run -- "$(cat /tmp/optimize-prompt.txt)" 2>&1 | tee optimize-output.log
 
       - name: Create optimization PR
         run: |

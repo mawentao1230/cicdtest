@@ -219,10 +219,7 @@ jobs:
           sed -i "s/TEST_STATUS/${TEST_STATUS}/g" /tmp/ai-prompt.txt
           sed -i "s/TEST_SUMMARY/${TEST_SUMMARY}/g" /tmp/ai-prompt.txt
 
-          opencode run \
-            --config .opencode/opencode.jsonc \
-            -m opencode/deepseek-v4-flash-free \
-            -- "$(cat /tmp/ai-prompt.txt)" 2>&1 | tee ai-output.log
+          opencode run -- "$(cat /tmp/ai-prompt.txt)" 2>&1 | tee ai-output.log
 
       - name: Parse decision
         id: parse-decision
