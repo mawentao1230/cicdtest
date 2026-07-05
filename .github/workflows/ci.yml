@@ -171,44 +171,44 @@ jobs:
           source ci-artifacts/results.env
 
           cat > /tmp/ai-prompt.txt <<'PROMPT_EOF'
-你是智能座舱 CI/CD 总指挥 Sisyphus。按以下顺序执行：
+          你是智能座舱 CI/CD 总指挥 Sisyphus。按以下顺序执行：
 
-## 第一步：代码审查
-1. git diff BASE_SHA...HEAD
-2. 调用 @oracle 做架构审查（AUTOSAR/DDS/接口兼容性）
-3. 调用 @momus 做代码质量审查（MISRA/安全/资源泄露）
-4. 调用 @explore 做上下文搜索（重复/历史变更）
+          ## 第一步：代码审查
+          1. git diff BASE_SHA...HEAD
+          2. 调用 @oracle 做架构审查（AUTOSAR/DDS/接口兼容性）
+          3. 调用 @momus 做代码质量审查（MISRA/安全/资源泄露）
+          4. 调用 @explore 做上下文搜索（重复/历史变更）
 
-## 第二步：编译/测试分析
-- LINT: LINT_STATUS
-- BUILD_ANDROID: BUILD_ANDROID_STATUS
-- BUILD_MAKE: BUILD_MAKE_STATUS
-- TEST: TEST_STATUS (TEST_SUMMARY)
+          ## 第二步：编译/测试分析
+          - LINT: LINT_STATUS
+          - BUILD_ANDROID: BUILD_ANDROID_STATUS
+          - BUILD_MAKE: BUILD_MAKE_STATUS
+          - TEST: TEST_STATUS (TEST_SUMMARY)
 
-读取 ci-artifacts/ 下的日志文件分析失败根因。
+          读取 ci-artifacts/ 下的日志文件分析失败根因。
 
-## 第三步：生成决策 JSON（纯 JSON，不要 Markdown 包裹）
-{
-  "decision": "PASS",
-  "confidence": 0.95,
-  "reason": "简要决策原因",
-  "details": {
-    "lint": "success",
-    "buildAndroid": "success",
-    "buildMake": "success",
-    "test": "success"
-  },
-  "reviewSummary": "代码审查摘要，描述发现了哪些问题",
-  "failures": [],
-  "retry_jobs": []
-}
+          ## 第三步：生成决策 JSON（纯 JSON，不要 Markdown 包裹）
+          {
+            "decision": "PASS",
+            "confidence": 0.95,
+            "reason": "简要决策原因",
+            "details": {
+              "lint": "success",
+              "buildAndroid": "success",
+              "buildMake": "success",
+              "test": "success"
+            },
+            "reviewSummary": "代码审查摘要，描述发现了哪些问题",
+            "failures": [],
+            "retry_jobs": []
+          }
 
-决策规则：
-- 全部通过 + 审查无严重问题 → PASS
-- 编译失败可自动修复 → RETRY
-- 编译失败不可修复 或 审查发现严重问题 → FAIL
-- 测试失败 flaky → PASS；真问题 → FAIL
-PROMPT_EOF
+          决策规则：
+          - 全部通过 + 审查无严重问题 → PASS
+          - 编译失败可自动修复 → RETRY
+          - 编译失败不可修复 或 审查发现严重问题 → FAIL
+          - 测试失败 flaky → PASS；真问题 → FAIL
+          PROMPT_EOF
 
           # 替换占位符为实际值
           sed -i "s/BASE_SHA/${BASE_SHA}/g" /tmp/ai-prompt.txt

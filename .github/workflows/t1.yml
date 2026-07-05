@@ -1,7 +1,0 @@
-name: T1
-on: push
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo lint
