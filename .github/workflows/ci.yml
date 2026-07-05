@@ -173,11 +173,6 @@ jobs:
           cp build-make.log ci-artifacts/build-make.log 2>/dev/null || echo "no make log"
           cp cmake-configure.log ci-artifacts/cmake.log 2>/dev/null || echo "no cmake log"
           cp test.log ci-artifacts/test.log 2>/dev/null || echo "no test log"
-          echo "LINT_STATUS='${{ needs.lint.outputs.status }}'" > ci-artifacts/results.env
-          echo "BUILD_ANDROID_STATUS='${{ needs.build-android.outputs.status }}'" >> ci-artifacts/results.env
-          echo "BUILD_MAKE_STATUS='${{ needs.build-make.outputs.status }}'" >> ci-artifacts/results.env
-          echo "TEST_STATUS='${{ needs.test.outputs.status }}'" >> ci-artifacts/results.env
-          echo "TEST_SUMMARY='${{ needs.test.outputs.summary }}'" >> ci-artifacts/results.env
 
       - name: Install OpenCode
         run: |
@@ -187,21 +182,14 @@ jobs:
       - name: Run AI Gate (review + decide)
         shell: bash
         run: |
-          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          PR_TITLE=$(jq --raw-output .pull_request.title "$GITHUB_EVENT_PATH")
-          PR_AUTHOR=$(jq --raw-output .pull_request.user.login "$GITHUB_EVENT_PATH")
-          BASE_SHA=$(jq --raw-output .pull_request.base.sha "$GITHUB_EVENT_PATH")
-
-          source ci-artifacts/results.env
-
           cat > /tmp/ai-prompt.txt <<'PROMPT_EOF'
           你是智能座舱 CI/CD 决策引擎。根据以下 CI 流水线执行结果，输出决策 JSON。
 
           ## 当前状态
-          - LINT: LINT_STATUS
-          - BUILD_ANDROID: BUILD_ANDROID_STATUS
-          - BUILD_MAKE: BUILD_MAKE_STATUS
-          - TEST: TEST_STATUS (TEST_SUMMARY)
+          - LINT: ${{ needs.lint.outputs.status }}
+          - BUILD_ANDROID: ${{ needs.build-android.outputs.status }}
+          - BUILD_MAKE: ${{ needs.build-make.outputs.status }}
+          - TEST: ${{ needs.test.outputs.status }} (${{ needs.test.outputs.summary }})
 
           ## 决策规则
           - 全部通过 → "PASS"
@@ -225,14 +213,6 @@ jobs:
             "retry_jobs": []
           }
           PROMPT_EOF
-
-          # 替换占位符为实际值
-          sed -i "s|BASE_SHA|${BASE_SHA}|g" /tmp/ai-prompt.txt
-          sed -i "s|LINT_STATUS|${LINT_STATUS}|g" /tmp/ai-prompt.txt
-          sed -i "s|BUILD_ANDROID_STATUS|${BUILD_ANDROID_STATUS}|g" /tmp/ai-prompt.txt
-          sed -i "s|BUILD_MAKE_STATUS|${BUILD_MAKE_STATUS}|g" /tmp/ai-prompt.txt
-          sed -i "s|TEST_STATUS|${TEST_STATUS}|g" /tmp/ai-prompt.txt
-          sed -i "s|TEST_SUMMARY|${TEST_SUMMARY}|g" /tmp/ai-prompt.txt
 
           opencode run --auto -- "$(cat /tmp/ai-prompt.txt)" 2>&1 | tee ai-output.log
 
