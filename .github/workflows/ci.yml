@@ -131,6 +131,7 @@ jobs:
   # ─── Stage 5: AI Gate (审查 + 决策 + 通知 + 合并) ──────────────
   ai-gate:
     name: AI Gate
+    if: always()
     runs-on: ubuntu-latest
     needs: [lint, build-android, build-make, test]
     outputs:
@@ -261,7 +262,7 @@ jobs:
     name: Auto Merge
     runs-on: ubuntu-latest
     needs: [ai-gate]
-    if: needs.ai-gate.outputs.decision == 'PASS'
+    if: always() && needs.ai-gate.outputs.decision == 'PASS'
     steps:
       - uses: actions/checkout@v4
       - name: Auto merge PR
