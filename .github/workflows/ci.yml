@@ -1,7 +1,6 @@
 name: Smart Cockpit CI Pipeline
 
 on:
-  push:
   pull_request:
     branches: [cicd_main, develop, release/*]
     types: [opened, synchronize, reopened]
@@ -26,7 +25,7 @@ jobs:
           cppcheck --enable=all --suppress=missingIncludeSystem \
             --std=c++17 --language=c++ \
             --xml --output-file=cppcheck-report.xml \
-            . 2>&1 | tee cppcheck.log || true
+            . 2>&1 | tee cppcheck.log; true
       - name: Run Android Lint
         if: hashFiles('**/build.gradle*') != ''
         continue-on-error: true
