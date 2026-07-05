@@ -291,6 +291,7 @@ jobs:
 
       - name: Execute decision
         run: |
+          npm install --production --no-save 2>/dev/null || true
           node .github/actions/execute-decision/index.js ai-output.log
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

@@ -1,6 +1,84 @@
 const fs = require("fs");
 const { execSync } = require("child_process");
 
+// ─── Email notification (reserved) ──────────────────────────
+// 激活方式: 在 GitHub Secrets 中添加:
+//   EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, EMAIL_TO
+// 不配置则自动跳过, 仅输出日志
+
+function emailEnabled() {
+  return !!(process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.EMAIL_TO);
+}
+
+async function sendEmailNotification(subject, htmlBody) {
+  if (!emailEnabled()) {
+    console.log("Email notification skipped (EMAIL_HOST not configured)");
+    return;
+  }
+  try {
+    const nodemailer = require("nodemailer");
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST,
+      port: parseInt(process.env.EMAIL_PORT || "587"),
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+    await transporter.sendMail({
+      from: `"Smart Cockpit CI" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_TO,
+      subject,
+      html: htmlBody,
+    });
+    console.log("Email sent to " + process.env.EMAIL_TO);
+  } catch (err) {
+    console.error("Email send failed:", err.message);
+  }
+}
+
+function buildEmailBody(decision, prInfo) {
+  const labels = { PASS: "通过", RETRY: "需重试", FAIL: "未通过" };
+  const result = labels[decision.decision] || decision.decision;
+
+  let h = `<h2>AI Gate Decision: ${result}</h2>`;
+  h += `<table style="border-collapse:collapse;font-family:monospace;">`;
+  h += `<tr><td style="padding:6px;border:1px solid #ddd;font-weight:bold">PR</td><td style="padding:6px;border:1px solid #ddd"><a href="https://github.com/mawentao1230/cicdtest/pull/${prInfo.number}">#${prInfo.number} ${prInfo.title}</a></td></tr>`;
+  h += `<tr><td style="padding:6px;border:1px solid #ddd;font-weight:bold">提交者</td><td style="padding:6px;border:1px solid #ddd">@${prInfo.author}</td></tr>`;
+  h += `<tr><td style="padding:6px;border:1px solid #ddd;font-weight:bold">决策</td><td style="padding:6px;border:1px solid #ddd;color:${decision.decision === 'PASS' ? '#2e7d32' : '#c62828'}">${decision.decision}</td></tr>`;
+  h += `<tr><td style="padding:6px;border:1px solid #ddd;font-weight:bold">置信度</td><td style="padding:6px;border:1px solid #ddd">${((decision.confidence||0)*100).toFixed(0)}%</td></tr>`;
+  if (decision.reviewScore != null) {
+    h += `<tr><td style="padding:6px;border:1px solid #ddd;font-weight:bold">审查评分</td><td style="padding:6px;border:1px solid #ddd">${decision.reviewScore}/100</td></tr>`;
+  }
+  h += `</table>`;
+
+  h += `<h3>Reason</h3><p>${decision.reason}</p>`;
+
+  const findings = decision.findings || [];
+  if (findings.length > 0) {
+    h += `<h3>Findings (${findings.length})</h3><ul>`;
+    for (const f of findings) {
+      h += `<li><b>[${f.level}]</b> ${f.file}:${f.line} — ${f.message}</li>`;
+    }
+    h += `</ul>`;
+  }
+
+  if (decision.reviewSummary) {
+    h += `<h3>Review Summary</h3><pre style="background:#f5f5f5;padding:8px;white-space:pre-wrap">${decision.reviewSummary}</pre>`;
+  }
+
+  if (decision.decision === "RETRY") {
+    h += `<p style="color:#e65100">⚠️ 等待人工确认: AI 已分析但不自动修复，请确认后处理。</p>`;
+  }
+  if (decision.decision === "FAIL") {
+    h += `<p style="color:#c62828">🚫 需要人工介入: 请审查 findings 后修复代码。</p>`;
+  }
+
+  h += `<hr><p style="color:#888;font-size:12px">OpenCode + OMO | ${new Date().toISOString()}</p>`;
+  return h;
+}
+
 function loadDecisionFromOutput(filePath) {
   const raw = fs.readFileSync(filePath, "utf8");
   const a = raw.indexOf("{");
@@ -143,6 +221,7 @@ function main() {
   console.log(`Reason: ${decision.reason}`);
 
   const comment = formatComment(decision);
+  const emailBody = buildEmailBody(decision, prInfo);
 
   switch (decision.decision) {
     case "PASS":
@@ -156,10 +235,18 @@ function main() {
       for (const job of decision.retry_jobs || []) {
         console.log(`Retry job needed: ${job}`);
       }
+      sendEmailNotification(
+        `[PR #${prInfo.number}] AI Gate: RETRY — ${prInfo.title}`,
+        emailBody
+      );
       break;
     case "FAIL":
       postPRComment(prInfo.number, comment);
       addPRLabel(prInfo.number, "ai-failed");
+      sendEmailNotification(
+        `[PR #${prInfo.number}] AI Gate: FAIL — ${prInfo.title}`,
+        emailBody
+      );
       break;
     default:
       console.error(`Unknown decision: ${decision.decision}`);
