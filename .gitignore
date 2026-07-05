@@ -1,6 +1,9 @@
 node_modules/
 .env
 *.log
+setup-secrets.*
+package.json
+package-lock.json
 decision.json
 decision-result.json
 ai-output.log
