@@ -76,8 +76,13 @@ function formatComment(decision) {
 
   let c = `## 🤖 AI Gate Review Result\n\n`;
   c += `**Decision**: ${emoji[decision.decision] || "❓"} **${decision.decision}** — ${text[decision.decision] || ""}\n\n`;
-  c += `**Confidence**: ${((decision.confidence || 0) * 100).toFixed(0)}%\n\n`;
-  c += `**Reason**: ${decision.reason}\n\n`;
+  c += `**Confidence**: ${((decision.confidence || 0) * 100).toFixed(0)}%`;
+
+  if (decision.reviewScore != null) {
+    const bar = decision.reviewScore >= 90 ? "🟢" : decision.reviewScore >= 70 ? "🟡" : "🔴";
+    c += ` | **Review Score**: ${bar} ${decision.reviewScore}/100`;
+  }
+  c += `\n\n**Reason**: ${decision.reason}\n\n`;
 
   c += `### Stage Status\n| Stage | Status |\n|-------|--------|\n`;
   for (const [k, v] of Object.entries(decision.details || {})) {
@@ -85,8 +90,19 @@ function formatComment(decision) {
     c += `| ${k} | ${icon} ${v} |\n`;
   }
 
+  const findings = decision.findings || [];
+  if (findings.length > 0) {
+    const levels = { BLOCKER: "❌", CRITICAL: "🔴", WARNING: "⚠️", SUGGESTION: "💡" };
+    c += `\n### Code Review Findings (${findings.length})\n`;
+    c += `| Level | Category | File:Line | Message |\n`;
+    c += `|-------|----------|-----------|--------|\n`;
+    for (const f of findings) {
+      c += `| ${levels[f.level] || "❓"} ${f.level} | ${f.category || "-"} | \`${f.file}:${f.line}\` | ${f.message} |\n`;
+    }
+  }
+
   if (decision.reviewSummary) {
-    c += `\n### Code Review Summary\n${decision.reviewSummary}\n`;
+    c += `\n### Review Summary\n${decision.reviewSummary}\n`;
   }
 
   const failures = decision.failures || [];

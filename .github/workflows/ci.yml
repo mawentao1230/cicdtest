@@ -174,6 +174,16 @@ jobs:
           cp cmake-configure.log ci-artifacts/cmake.log 2>/dev/null || echo "no cmake log"
           cp test.log ci-artifacts/test.log 2>/dev/null || echo "no test log"
 
+      - name: Generate code diff
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff "origin/${{ github.base_ref }}...HEAD" -- . ':!.github' ':!.opencode' 2>/dev/null | head -c 8000 > /tmp/code-diff.txt
+          else
+            git diff HEAD~1 -- . ':!.github' ':!.opencode' 2>/dev/null | head -c 8000 > /tmp/code-diff.txt
+          fi
+          echo "Diff size: $(wc -c < /tmp/code-diff.txt) bytes"
+
       - name: Install OpenCode
         run: |
           curl -fsSL https://opencode.ai/install | bash
@@ -183,32 +193,74 @@ jobs:
         shell: bash
         run: |
           cat > /tmp/ai-prompt.txt <<'PROMPT_EOF'
-          你是智能座舱 CI/CD 决策引擎。根据以下 CI 流水线执行结果，输出决策 JSON。
+          你是智能座舱 CI/CD 代码审查与决策引擎。执行以下步骤后，输出决策 JSON。
 
-          ## 当前状态
+          ## 第一步：代码审查
+          按以下规范审查代码变更（规范已在 .opencode/REVIEW.md 中定义）：
+
+          ### 审查等级
+          - P0/BLOCKER: 编译失败、崩溃、安全漏洞 → 必须拦截
+          - P1/CRITICAL: 内存泄露、数据竞争、空指针、资源泄露 → 必须拦截
+          - P2/WARNING: 代码质量、可维护性 → 记录但不拦截
+          - P3/SUGGESTION: 风格建议 → 忽略
+
+          ### 重点检查
+          1. C++: 裸指针未判空、数组越界、资源未释放 (RAII)、整数溢出
+          2. Java/Kotlin: 空引用、异常吞没、资源未关闭、线程安全
+          3. 通用: 日志中泄露敏感信息 (密码/Token)、硬编码凭据
+          4. 座舱: 主线程 IO/网络阻塞、CAN/DDS 协议兼容性
+
+          ### 代码变更
+
+          PROMPT_EOF
+
+          # Append the diff content
+          if [ -s /tmp/code-diff.txt ]; then
+            echo '```diff' >> /tmp/ai-prompt.txt
+            cat /tmp/code-diff.txt >> /tmp/ai-prompt.txt
+            echo '```' >> /tmp/ai-prompt.txt
+          else
+            echo "(本次提交无代码变更，或仅修改了配置/工作流文件)" >> /tmp/ai-prompt.txt
+          fi
+
+          cat >> /tmp/ai-prompt.txt <<'PROMPT_EOF'
+
+          ## 第二步：流水线结果
           - LINT: ${{ needs.lint.outputs.status }}
           - BUILD_ANDROID: ${{ needs.build-android.outputs.status }}
           - BUILD_MAKE: ${{ needs.build-make.outputs.status }}
           - TEST: ${{ needs.test.outputs.status }} (${{ needs.test.outputs.summary }})
 
-          ## 决策规则
-          - 全部通过 → "PASS"
-          - 仅 lint 失败（cppcheck 无 C++ 源码导致）→ "PASS"（这是误报）
-          - 编译失败且有修复可能 → "RETRY"
-          - 编译失败无法修复 / 测试真失败 → "FAIL"
+          ## 第三步：决策规则
+          1. 任何 P0/BLOCKER 发现 → FAIL
+          2. 任何 P1/CRITICAL 发现 → FAIL
+          3. 仅有 P2/P3 发现 + 流水线全部通过 → PASS (附带 findings)
+          4. 编译失败可自动修复 → RETRY
+          5. 测试真失败 (非 flaky) → FAIL
 
-          ## 输出要求
+          ## 输出格式
           仅输出以下 JSON 对象，不要任何其他文字、Markdown 包裹、代码块标记、尾逗号。
           {
             "decision": "PASS",
             "confidence": 0.95,
-            "reason": "简要原因",
+            "reason": "决策原因一句话",
             "details": {
-              "lint": "success/failure/skipped",
-              "buildAndroid": "success/failure/skipped",
-              "buildMake": "success/failure/skipped",
-              "test": "success/failure/skipped"
+              "lint": "success",
+              "buildAndroid": "success",
+              "buildMake": "success",
+              "test": "success"
             },
+            "reviewSummary": "代码审查摘要，无问题时填 No issues found.",
+            "reviewScore": 95,
+            "findings": [
+              {
+                "file": "path/to/file",
+                "line": 42,
+                "level": "BLOCKER",
+                "category": "Security",
+                "message": "具体问题描述"
+              }
+            ],
             "failures": [],
             "retry_jobs": []
           }
