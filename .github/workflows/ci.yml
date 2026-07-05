@@ -219,20 +219,18 @@ jobs:
           DECISION=$(node -e "
             const fs = require('fs');
             const raw = fs.readFileSync('ai-output.log','utf8');
-            try {
-              const parsed = JSON.parse(raw);
-              console.log(parsed.decision);
-            } catch(e) {
-              const m = raw.match(/\\{[\\s\\S]*?\"decision\"[\\s\\S]*?\\}/);
-              if (m) {
-                const clean = m[0].replace(/,\\s*([\\]\\}])/g, '$1');
-                const parsed = JSON.parse(clean);
+            const a = raw.indexOf('{');
+            const b = raw.lastIndexOf('}');
+            if (a >= 0 && b > a) {
+              const json = raw.slice(a, b + 1).replace(/,\s*([\]}])/g, '$1');
+              try {
+                const parsed = JSON.parse(json);
                 console.log(parsed.decision);
-              } else {
-                console.log('FAIL');
-                console.error('Cannot parse decision from AI output');
-              }
+                process.exit(0);
+              } catch(e) {}
             }
+            console.log('FAIL');
+            console.error('Cannot parse decision from AI output');
           ")
           echo "decision=$DECISION" >> $GITHUB_OUTPUT
           echo "AI Decision: $DECISION"

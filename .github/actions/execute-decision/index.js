@@ -3,11 +3,12 @@ const { execSync } = require("child_process");
 
 function loadDecisionFromOutput(filePath) {
   const raw = fs.readFileSync(filePath, "utf8");
-  const jsonMatch = raw.match(/\{[\s\S]*?"decision"[\s\S]*?\}/);
-  if (!jsonMatch) {
+  const a = raw.indexOf("{");
+  const b = raw.lastIndexOf("}");
+  if (a < 0 || b <= a) {
     throw new Error("无法从 AI 输出中提取决策 JSON");
   }
-  const clean = jsonMatch[0].replace(/,\s*([\]}])/g, '$1');
+  const clean = raw.slice(a, b + 1).replace(/,\s*([\]}])/g, "$1");
   return JSON.parse(clean);
 }
 
