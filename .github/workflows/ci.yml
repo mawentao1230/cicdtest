@@ -1,6 +1,7 @@
 name: Smart Cockpit CI Pipeline
 
 on:
+  push:
   pull_request:
     branches: [cicd_main, develop, release/*]
     types: [opened, synchronize, reopened]
