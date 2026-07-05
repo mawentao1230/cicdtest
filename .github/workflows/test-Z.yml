@@ -1,0 +1,28 @@
+name: Test Z - Minimal Jobs
+on: push
+jobs:
+  lint:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run cppcheck
+        id: cppcheck
+        continue-on-error: true
+        run: |
+          cppcheck --enable=all --suppress=missingIncludeSystem \
+            --std=c++17 --language=c++ \
+            --xml --output-file=cppcheck-report.xml \
+            . 2>&1 | tee cppcheck.log || true
+      - name: Run Android Lint
+        if: hashFiles('**/build.gradle*') != ''
+        continue-on-error: true
+        run: |
+          if [ -f "gradlew" ]; then
+            ./gradlew lint 2>&1 | tee android-lint.log || true
+          fi
+      - name: Set outputs
+        id: lint-out
+        run: |
+          echo "status=${{ steps.cppcheck.outcome }}" >> $GITHUB_OUTPUT
+          cat cppcheck.log android-lint.log 2>/dev/null > lint-combined.log
