@@ -16,6 +16,10 @@ object LogUtils {
         return String.format(Locale.US, "%s: %.2f %s", name, value, unit)
     }
 
+    fun formatSensorReading(name: String, value: Double, unit: String): String {
+        return String.format(Locale.US, "%s: %.4f %s", name, value, unit)
+    }
+
     fun truncateMessage(message: String, maxLength: Int = 200): String {
         return if (message.length <= maxLength) message
         else message.substring(0, maxLength) + "..."
