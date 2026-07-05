@@ -1,0 +1,10 @@
+node_modules/
+.env
+*.log
+decision.json
+decision-result.json
+ai-output.log
+ci-artifacts/
+optimize-output.log
+optimization-plan.md
+build/
