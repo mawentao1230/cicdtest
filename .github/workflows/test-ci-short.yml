@@ -1,0 +1,10 @@
+name: CI Short
+on:
+  pull_request:
+    branches: [cicd_main, develop, release/*]
+    types: [opened, synchronize, reopened]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "ci-short triggered"
