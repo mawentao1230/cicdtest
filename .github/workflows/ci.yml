@@ -169,11 +169,11 @@ jobs:
           cp build-make.log ci-artifacts/build-make.log 2>/dev/null || echo "no make log"
           cp cmake-configure.log ci-artifacts/cmake.log 2>/dev/null || echo "no cmake log"
           cp test.log ci-artifacts/test.log 2>/dev/null || echo "no test log"
-          echo "LINT_STATUS=${{ needs.lint.outputs.status }}" > ci-artifacts/results.env
-          echo "BUILD_ANDROID_STATUS=${{ needs.build-android.outputs.status }}" >> ci-artifacts/results.env
-          echo "BUILD_MAKE_STATUS=${{ needs.build-make.outputs.status }}" >> ci-artifacts/results.env
-          echo "TEST_STATUS=${{ needs.test.outputs.status }}" >> ci-artifacts/results.env
-          echo "TEST_SUMMARY=${{ needs.test.outputs.summary }}" >> ci-artifacts/results.env
+          echo "LINT_STATUS='${{ needs.lint.outputs.status }}'" > ci-artifacts/results.env
+          echo "BUILD_ANDROID_STATUS='${{ needs.build-android.outputs.status }}'" >> ci-artifacts/results.env
+          echo "BUILD_MAKE_STATUS='${{ needs.build-make.outputs.status }}'" >> ci-artifacts/results.env
+          echo "TEST_STATUS='${{ needs.test.outputs.status }}'" >> ci-artifacts/results.env
+          echo "TEST_SUMMARY='${{ needs.test.outputs.summary }}'" >> ci-artifacts/results.env
 
       - name: Install OpenCode
         run: |
@@ -223,12 +223,12 @@ jobs:
           PROMPT_EOF
 
           # 替换占位符为实际值
-          sed -i "s/BASE_SHA/${BASE_SHA}/g" /tmp/ai-prompt.txt
-          sed -i "s/LINT_STATUS/${LINT_STATUS}/g" /tmp/ai-prompt.txt
-          sed -i "s/BUILD_ANDROID_STATUS/${BUILD_ANDROID_STATUS}/g" /tmp/ai-prompt.txt
-          sed -i "s/BUILD_MAKE_STATUS/${BUILD_MAKE_STATUS}/g" /tmp/ai-prompt.txt
-          sed -i "s/TEST_STATUS/${TEST_STATUS}/g" /tmp/ai-prompt.txt
-          sed -i "s/TEST_SUMMARY/${TEST_SUMMARY}/g" /tmp/ai-prompt.txt
+          sed -i "s|BASE_SHA|${BASE_SHA}|g" /tmp/ai-prompt.txt
+          sed -i "s|LINT_STATUS|${LINT_STATUS}|g" /tmp/ai-prompt.txt
+          sed -i "s|BUILD_ANDROID_STATUS|${BUILD_ANDROID_STATUS}|g" /tmp/ai-prompt.txt
+          sed -i "s|BUILD_MAKE_STATUS|${BUILD_MAKE_STATUS}|g" /tmp/ai-prompt.txt
+          sed -i "s|TEST_STATUS|${TEST_STATUS}|g" /tmp/ai-prompt.txt
+          sed -i "s|TEST_SUMMARY|${TEST_SUMMARY}|g" /tmp/ai-prompt.txt
 
           opencode run --auto -- "$(cat /tmp/ai-prompt.txt)" 2>&1 | tee ai-output.log
 
