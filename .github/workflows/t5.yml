@@ -1,0 +1,25 @@
+name: T5
+on: push
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.out.status }}
+    steps:
+      - id: out
+        run: echo 'status=ok' >> $GITHUB_OUTPUT
+  build:
+    needs: [lint]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ${{ needs.lint.outputs.status }}
+  test:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo test
+  gate:
+    needs: [lint, build, test]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo gate
