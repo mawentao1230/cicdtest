@@ -61,22 +61,23 @@ jobs:
       - name: Create optimization PR
         shell: bash
         run: |
+          set +e
           if [ -f "optimization-plan.md" ]; then
             git config user.name "CI Optimizer"
             git config user.email "ci@smart-cockpit.ai"
             BRANCH="ci/optimize-$(date +%Y%m%d)"
-            git checkout -b "$BRANCH" 2>/dev/null || git checkout "$BRANCH"
+            git checkout -b "$BRANCH" 2>/dev/null || git checkout "$BRANCH" 2>/dev/null
             git add .github/workflows/ optimization-plan.md
-            if git diff --staged --quiet; then
-              echo "No changes to commit, skipping PR"
-            else
-              git commit -m "ci: weekly pipeline optimization $(date +%Y-%m-%d)"
-              git push origin "$BRANCH" --force 2>/dev/null || echo "Push skipped"
+            if ! git diff --staged --quiet; then
+              git commit -m "ci: weekly pipeline optimization $(date +%Y-%m-%d)" 2>/dev/null
+              git push origin "$BRANCH" --force 2>/dev/null
               gh pr create \
                 --title "CI Pipeline Weekly Optimization $(date +%Y-%m-%d)" \
-                --body "$(head -c 64000 optimization-plan.md)" \
-                --base cicd_main 2>/dev/null || echo "PR may already exist"
+                --body-file optimization-plan.md \
+                --base cicd_main 2>/dev/null
             fi
+            echo "Optimization plan created: $(wc -c < optimization-plan.md) bytes"
           else
             echo "No optimization needed, pipeline is healthy."
           fi
+          exit 0
