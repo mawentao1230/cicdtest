@@ -259,4 +259,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          gh pr merge "$PR_NUMBER" --squash --auto --subject "AI Gate: All checks passed"
+          if [ "$PR_NUMBER" = "null" ] || [ -z "$PR_NUMBER" ]; then
+            echo "No PR to merge (push event, skipping)"
+          else
+            gh pr merge "$PR_NUMBER" --squash --auto --subject "AI Gate: All checks passed"
+          fi
