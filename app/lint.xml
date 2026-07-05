@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="HardcodedText" severity="warning" />
+    <issue id="MissingTranslation" severity="ignore" />
+    <issue id="ObsoleteLayoutParam" severity="error" />
+    <issue id="UnusedResources" severity="warning" />
+    <issue id="IconMissingDensityFolder" severity="warning" />
+    <issue id="NewApi" severity="error" />
+</lint>
