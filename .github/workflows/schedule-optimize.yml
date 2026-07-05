@@ -59,20 +59,24 @@ jobs:
           opencode run -- "$(cat /tmp/optimize-prompt.txt)" 2>&1 | tee optimize-output.log
 
       - name: Create optimization PR
+        shell: bash
         run: |
           if [ -f "optimization-plan.md" ]; then
             git config user.name "CI Optimizer"
             git config user.email "ci@smart-cockpit.ai"
             BRANCH="ci/optimize-$(date +%Y%m%d)"
-            git checkout -b "$BRANCH"
-            git add .github/workflows/
-            git add optimization-plan.md
-            git commit -m "ci: weekly pipeline optimization $(date +%Y-%m-%d)"
-            git push origin "$BRANCH"
-            gh pr create \
-              --title "CI Pipeline Weekly Optimization $(date +%Y-%m-%d)" \
-              --body "$(cat optimization-plan.md)" \
-              --base cicd_main
+            git checkout -b "$BRANCH" 2>/dev/null || git checkout "$BRANCH"
+            git add .github/workflows/ optimization-plan.md
+            if git diff --staged --quiet; then
+              echo "No changes to commit, skipping PR"
+            else
+              git commit -m "ci: weekly pipeline optimization $(date +%Y-%m-%d)"
+              git push origin "$BRANCH" --force 2>/dev/null || echo "Push skipped"
+              gh pr create \
+                --title "CI Pipeline Weekly Optimization $(date +%Y-%m-%d)" \
+                --body "$(head -c 64000 optimization-plan.md)" \
+                --base cicd_main 2>/dev/null || echo "PR may already exist"
+            fi
           else
             echo "No optimization needed, pipeline is healthy."
           fi
