@@ -23,7 +23,7 @@
 
 仓库 → Settings → Branches → Add rule：
 
-- Branch name pattern: `main`
+- Branch name pattern: `cicd_main`
 - ✅ Require a pull request before merging
 - ✅ Require status checks to pass before merging
   - `Smart Cockpit CI Pipeline / AI Gate`

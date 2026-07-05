@@ -75,7 +75,7 @@ PROMPT_EOF
             gh pr create \
               --title "CI Pipeline Weekly Optimization $(date +%Y-%m-%d)" \
               --body "$(cat optimization-plan.md)" \
-              --base main
+              --base cicd_main
           else
             echo "No optimization needed, pipeline is healthy."
           fi
