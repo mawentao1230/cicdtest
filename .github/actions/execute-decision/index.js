@@ -3,7 +3,7 @@ const { execSync } = require("child_process");
 
 function loadDecisionFromOutput(filePath) {
   const raw = fs.readFileSync(filePath, "utf8");
-  const jsonMatch = raw.match(/\{[\s\S]*?"decision"[\s\S]*?"confidence"[\s\S]*?\}/);
+  const jsonMatch = raw.match(/\{[\s\S]*?"decision"[\s\S]*?\}/);
   if (!jsonMatch) {
     throw new Error("无法从 AI 输出中提取决策 JSON");
   }
