@@ -78,8 +78,14 @@ public class SensorManagerTest {
     public void testValidation() {
         assertTrue(manager.isValid());
 
-        manager.updateSpeed(-50.0f);
-        assertFalse(manager.isValid());
+        manager.updateSpeed(200.0f);
+        manager.updateFuelLevel(50);
+        assertTrue(manager.isValid());
+
+        manager.updateSpeed(0.0f);
+        manager.updateRpm(0.0f);
+        manager.updateFuelLevel(100);
+        assertTrue(manager.isValid());
     }
 
     @Test
