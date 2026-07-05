@@ -1,0 +1,17 @@
+name: T3
+on: push
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo lint
+  build-android:
+    needs: [lint]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo android
+  build-make:
+    needs: [lint]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo make
