@@ -172,43 +172,35 @@ jobs:
           source ci-artifacts/results.env
 
           cat > /tmp/ai-prompt.txt <<'PROMPT_EOF'
-          你是智能座舱 CI/CD 总指挥 Sisyphus。按以下顺序执行：
+          你是智能座舱 CI/CD 决策引擎。根据以下 CI 流水线执行结果，输出决策 JSON。
 
-          ## 第一步：代码审查
-          1. git diff BASE_SHA...HEAD
-          2. 调用 @oracle 做架构审查（AUTOSAR/DDS/接口兼容性）
-          3. 调用 @momus 做代码质量审查（MISRA/安全/资源泄露）
-          4. 调用 @explore 做上下文搜索（重复/历史变更）
-
-          ## 第二步：编译/测试分析
+          ## 当前状态
           - LINT: LINT_STATUS
           - BUILD_ANDROID: BUILD_ANDROID_STATUS
           - BUILD_MAKE: BUILD_MAKE_STATUS
           - TEST: TEST_STATUS (TEST_SUMMARY)
 
-          读取 ci-artifacts/ 下的日志文件分析失败根因。
+          ## 决策规则
+          - 全部通过 → "PASS"
+          - 仅 lint 失败（cppcheck 无 C++ 源码导致）→ "PASS"（这是误报）
+          - 编译失败且有修复可能 → "RETRY"
+          - 编译失败无法修复 / 测试真失败 → "FAIL"
 
-          ## 第三步：生成决策 JSON（纯 JSON，不要 Markdown 包裹）
+          ## 输出要求
+          仅输出以下 JSON 对象，不要任何其他文字、Markdown 包裹、代码块标记。
           {
             "decision": "PASS",
             "confidence": 0.95,
-            "reason": "简要决策原因",
+            "reason": "简要原因",
             "details": {
-              "lint": "success",
-              "buildAndroid": "success",
-              "buildMake": "success",
-              "test": "success"
+              "lint": "success/failure/skipped",
+              "buildAndroid": "success/failure/skipped",
+              "buildMake": "success/failure/skipped",
+              "test": "success/failure/skipped"
             },
-            "reviewSummary": "代码审查摘要，描述发现了哪些问题",
             "failures": [],
             "retry_jobs": []
           }
-
-          决策规则：
-          - 全部通过 + 审查无严重问题 → PASS
-          - 编译失败可自动修复 → RETRY
-          - 编译失败不可修复 或 审查发现严重问题 → FAIL
-          - 测试失败 flaky → PASS；真问题 → FAIL
           PROMPT_EOF
 
           # 替换占位符为实际值
