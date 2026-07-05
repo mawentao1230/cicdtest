@@ -26,10 +26,10 @@ jobs:
       - name: Collect CI metrics
         run: |
           gh run list --workflow "Smart Cockpit CI Pipeline" \
-            --limit 100 --json conclusion,createdAt,duration,headBranch \
+            --limit 100 --json conclusion,createdAt,headBranch,status,event,databaseId \
             > ci-metrics.json
           gh run list --workflow "Smart Cockpit CI Pipeline" \
-            --event pull_request --limit 50 --json conclusion,duration \
+            --event pull_request --limit 50 --json conclusion,createdAt,status \
             > build-trend.json
 
       - name: AI Analysis and Optimization
