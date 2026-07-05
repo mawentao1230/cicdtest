@@ -1,0 +1,22 @@
+name: T4
+on: push
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo lint
+  build:
+    needs: [lint]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build
+  test:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo test
+  gate:
+    needs: [lint, build, test]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo gate
