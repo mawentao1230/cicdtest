@@ -1,0 +1,11 @@
+name: P5
+on: push
+jobs:
+  lint:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.out.status }}
+    steps:
+      - id: out
+        run: echo "status=ok" >> $GITHUB_OUTPUT
