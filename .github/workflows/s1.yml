@@ -1,0 +1,39 @@
+name: S1
+on: push
+jobs:
+  lint:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo lint
+  build-android:
+    name: Build (Android/Gradle)
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - run: echo android
+  build-make:
+    name: Build (Make)
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - run: echo make
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: [build-android, build-make]
+    steps:
+      - run: echo test
+  ai-gate:
+    name: AI Gate
+    runs-on: ubuntu-latest
+    needs: [lint, build-android, build-make, test]
+    steps:
+      - run: echo gate
+  merge:
+    name: Auto Merge
+    runs-on: ubuntu-latest
+    needs: [ai-gate]
+    if: false
+    steps:
+      - run: echo merge
