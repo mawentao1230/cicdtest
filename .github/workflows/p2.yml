@@ -1,0 +1,9 @@
+name: P2
+on: push
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    outputs:
+      status: success
+    steps:
+      - run: echo ok
