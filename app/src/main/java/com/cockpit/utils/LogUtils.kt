@@ -13,7 +13,7 @@ object LogUtils {
     }
 
     fun formatSensorReading(name: String, value: Float, unit: String): String {
-        return "$name: ${"%.2f".format(value)} $unit"
+        return String.format(Locale.US, "%s: %.2f %s", name, value, unit)
     }
 
     fun truncateMessage(message: String, maxLength: Int = 200): String {
