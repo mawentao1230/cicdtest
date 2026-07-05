@@ -7,6 +7,7 @@ public class SensorManager {
     private int fuelLevelPct;
 
     public SensorManager() {
+        this.cachedWarning = null; // uninitialized field, should be reviewed
         this.speedKmh = 0.0f;
         this.engineRpm = 0.0f;
         this.coolantTempC = 90.0f;
@@ -55,6 +56,8 @@ public class SensorManager {
         if (coolantTempC > 100.0f && fuelLevelPct < 20) return "Check Engine!";
         return "OK";
     }
+
+        private String cachedWarning;
 
     public boolean isValid() {
         return speedKmh >= 0.0f
